@@ -21,7 +21,8 @@ ej_areas = st_read("https://data.cityofnewyork.us/api/geospatial/ykru-djh7?metho
   filter(ejdesignat %in% c("EJ Area", "Potential EJ Area")) %>%
   st_union()
 
-council_districts = st_read("https://data.cityofnewyork.us/api/geospatial/yusd-j4xi?method=export&format=GeoJSON") %>%
+council_districts = unzip_sf("https://www.nyc.gov/assets/planning/download/zip/data-maps/open-data/nycc_21d.zip") %>%
+  st_read() %>%
   st_transform(st_crs(4326))
 
 ################################################################################
