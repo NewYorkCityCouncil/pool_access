@@ -5,7 +5,7 @@
 #' 
 #' IF YOU DO NOT WANT TO INSTALL ANY OF THESE PACKAGES, DO NOT RUN THIS CODE.
 
-list.of.packages <- c("tidyverse", "mapbox")
+list.of.packages <- c("tidyverse", "mapbox", "tidycensus", "parallel")
 
 # checks if packages has been previously installed
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
@@ -32,6 +32,8 @@ unzip_sf <- function(zip_url) {
   unlist(temp2)
   return(your_SHP_file)
 }
+
+range01 <- function(x){(x-min(x))/(max(x)-min(x))}
 
 # remove created variables for packages
 rm(list.of.packages,new.packages)
