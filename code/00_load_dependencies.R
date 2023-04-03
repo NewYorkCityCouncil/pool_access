@@ -5,7 +5,14 @@
 #' 
 #' IF YOU DO NOT WANT TO INSTALL ANY OF THESE PACKAGES, DO NOT RUN THIS CODE.
 
-list.of.packages <- c("tidyverse", "mapbox", "tidycensus", "parallel")
+list.of.packages <- c("tidyverse", "mapboxapi", "tidycensus", "parallel", 
+                      "councildown", "leaflet", "leaflet.extras", "sf")
+
+# checks if packages has been previously installed
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+
+# if not, packages are installed
+if(length(new.packages)) install.packages(new.packages)
 
 # checks if packages has been previously installed
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]

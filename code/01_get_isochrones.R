@@ -27,6 +27,8 @@ get_isochrone = function(data, t = 15) {
   Sys.sleep(0.25) # to force us not to go over the API limit
   return(temp)
 }
+
+# get the 15 minute walk zones for each pool, combine into shapefile, then union to make single shape
 pools_walk_zone_15min = apply(pools, 1, FUN = get_isochrone)
 pools_walk_zone_15min = bind_rows(pools_walk_zone_15min)
 pools_walk_zone_15min = st_union(pools_walk_zone_15min)
@@ -49,7 +51,19 @@ no_use = city_property %>%
                         "NO USE-RESIDENTIAL STRUCTURE", 
                         "UNDEVELOPED OPEN SPACE"))
 
-# takes ~15 minutes since we are rate limited to 300 requests a minute
+# figure out which no use locations fall in our interest area
+interest_area = st_read("https://data.cityofnewyork.us/api/geospatial/ykru-djh7?method=export&format=GeoJSON") %>%
+  filter(ejdesignat %in% c("EJ Area", "Potential EJ Area")) %>%
+  st_union() %>%
+  st_difference(pools_walk_zone_15min)
+
+# figure out which no_use locations are within the interest area and filter down
+overlaps_area = st_intersects(no_use, interest_area)
+overlaps_area = sapply(overlaps_area, length)
+no_use = no_use[overlaps_area == 1, ]
+
+# for each of the potential new pool locations, find 15 minute walk zone
+# takes several minutes since we are rate limited to 300 requests a minute
 land_walk_zone_15min = apply(no_use, 1, FUN = get_isochrone)
 land_walk_zone_15min = bind_rows(land_walk_zone_15min)
 
@@ -84,7 +98,7 @@ pop = pop %>%
          # get rid of tiny measurement errors like -0.000000000001
          perc_area = ifelse(perc_area < 0, 0, perc_area), 
          
-         # scale pop by % not in zone
+         # scale pop by (assumed) % not in zone
          pop = value * perc_area) %>%
   select(-total_area, -area_within_pool_zone, -value)
 
