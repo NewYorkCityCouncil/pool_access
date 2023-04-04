@@ -7,7 +7,7 @@
 
 list.of.packages <- c("tidyverse", "mapboxapi", "tidycensus", "parallel", 
                       "councildown", "leaflet", "leaflet.extras", "sf", 
-                      "rcartocolor", "RColorBrewer")
+                      "rcartocolor", "RColorBrewer", "gtExtras", "gt", "webshot2")
 
 # checks if packages has been previously installed
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
