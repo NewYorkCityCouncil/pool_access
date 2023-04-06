@@ -43,7 +43,7 @@ pools_by_district = sapply(pools_by_district, length)
 council_districts$num_pools = pools_by_district
 
 pal = colorFactor(
-  palette = c("grey", carto_pal(5, "Teal")),
+  palette = c("#CACACA", nycc_pal("warm")(4)),
   domain = council_districts$num_pools
 )
 
@@ -52,15 +52,13 @@ map = leaflet(options = leafletOptions(zoomControl = FALSE,
                                  maxZoom = 16)) %>% 
   addPolygons(data = council_districts, weight = 0, color = ~pal(num_pools), 
               fillOpacity = 0.8) %>% 
-  addProviderTiles('CartoDB.Positron', 
-                   options = providerTileOptions(minZoom = 11, maxZoom = 16)) %>%
   addCouncilStyle(add_dists = TRUE) %>%
   addLegend_decreasing(position = "topleft", pal = pal, 
             title = "Number of Pools",
             values = sort(unique(council_districts$num_pools)), opacity = 1, 
             decreasing = T)
 
-mapshot(map, 
+mapview::mapshot(map, 
         file = file.path("visuals", "pool_count_by_council_district.png"),
         remove_controls = c("homeButton", "layersControl"), vwidth = 1000, vheight = 850)
 
@@ -88,8 +86,7 @@ block_intersection = st_intersection(pop, pools_walk_zone_15min) %>%
   st_drop_geometry() %>%
   select(GEOID, area_within_pool_zone)
 
-# adjust the population to only include people not within a 15 minute walk of 
-#   a pool already (assuming uniform population dist over each block)
+# for each block group get the population <15 min from a pool + the total pop
 pop = pop %>%
   merge(block_intersection, by = "GEOID", all.x = T) %>%
   mutate(total_area = as.numeric(st_area(.)), 
@@ -105,6 +102,7 @@ pop = pop %>%
   select(-total_area, -area_within_pool_zone, -value)
 
 
+# formula to apply for each council district
 get_overlap_pop = function(x, population, col="pop") {
   # where x is list of ids from pop
   overlap_pop = population[x, ]
@@ -112,6 +110,8 @@ get_overlap_pop = function(x, population, col="pop") {
   return(overlap_pop)
 }
 
+# get the list of blocks that each council district overlaps then apply the formula
+#   to get the pop <15 min from pool + total council district pop
 council_block_intersection = st_intersects(council_districts, pop)
 council_districts$pop_near_pool = sapply(council_block_intersection,
                                          get_overlap_pop, 
@@ -120,8 +120,10 @@ council_districts$pop = sapply(council_block_intersection, get_overlap_pop,
                                population=pop, col="pop")
 council_districts$perc_near_pool = council_districts$pop_near_pool/council_districts$pop
 
+
+# prep for plotting
 pal = colorNumeric(
-  palette = colorRamp(brewer.pal(9, "Blues")),
+  palette = colorRamp(rev(nycc_pal("cool")(12))),
   domain = c(0, 1),
   na.color = "transparent"
 )
@@ -134,19 +136,16 @@ map = leaflet(options = leafletOptions(zoomControl = FALSE,
                                  maxZoom = 16)) %>% 
   addPolygons(data = council_districts, weight = 0, color = ~pal(perc_near_pool), 
               fillOpacity = 0.8, popup = popup) %>% 
-  addProviderTiles('CartoDB.Positron', 
-                   options = providerTileOptions(minZoom = 11, maxZoom = 16)) %>%
   addCouncilStyle(add_dists = TRUE) %>%
   addLegend_decreasing(position = "topleft", pal = pal, 
-            title = paste0("Number of people who would gain pool access <br>",
-                           "within 15 minute walk if a pool were <br>", 
-                           "placed at best 'no use' location in district"),  
-            values = c(0, 1), opacity = 1, 
-            labels = c("100%", "80%", "60%", "40%", "20%", "0%"), 
-            decreasing = T)
+            title = paste0("% of population that has access to <br>", 
+                           "a pool within a 15 minute walk"),  
+            values = c(0, 1), opacity = 1, decreasing = T, 
+            labFormat = labelFormat(transform = function(x){x*100}, 
+                                    suffix = "%"))
 
-mapshot(map, 
-        file = file.path("visuals", "count_gained_pool_access_by_council_district.png"),
+mapview::mapshot(map, 
+        file = file.path("visuals", "perc_pool_access_by_council_district.png"),
         remove_controls = c("homeButton", "layersControl"), vwidth = 1000, vheight = 850)
 
 
@@ -161,9 +160,11 @@ council_districts$num_nouse = nouse_by_district
 council_districts$capped_num_nouse = ifelse(council_districts$num_nouse > 100, 
                                             100, council_districts$num_nouse)
 
+# prep for plotting
 pal = colorNumeric(
-  palette = colorRamp(c("white", carto_pal(5, "Purp"))),
-  domain = council_districts$capped_num_nouse
+  palette = colorRamp(rev(nycc_pal("cool")(12))),
+  domain = c(0, 100),
+  na.color = "transparent"
 )
 
 map = leaflet(options = leafletOptions(zoomControl = FALSE, 
@@ -171,17 +172,15 @@ map = leaflet(options = leafletOptions(zoomControl = FALSE,
                                  maxZoom = 16)) %>% 
   addPolygons(data = council_districts, weight = 0, color = ~pal(capped_num_nouse), 
               fillOpacity = 0.8) %>% 
-  addProviderTiles('CartoDB.Positron', 
-                   options = providerTileOptions(minZoom = 11, maxZoom = 16)) %>%
   addCouncilStyle(add_dists = TRUE) %>%
-  addLegend(position = "topleft", pal = pal, 
-            values = sort(unique(council_districts$capped_num_nouse)),
+  addLegend_decreasing(position = "topleft", pal = pal, 
+            values = council_districts$capped_num_nouse,
             title = paste0("Number of 'no use' city  <br>", 
-                           "owned properties in district"),
-           # labels = c(">100", "80", "60", "40", "20", "0"),
-            opacity = 1)#, decreasing = T)
+                           "owned properties in district"), 
+            labels = c(">100", "80", "60", "40", "20", "0"),
+            opacity = 1, decreasing = T)
 
-mapshot(map, 
+mapview::mapshot(map, 
         file = file.path("visuals", "number_no_use_by_council_district.png"),
         remove_controls = c("homeButton", "layersControl"), vwidth = 1000, vheight = 850)
 
@@ -189,15 +188,6 @@ mapshot(map,
 ################################################################################
 # create council district level tables
 ################################################################################
-
-# ------------------------------------------------------------------------------
-# get number of existing pools by district
-
-
-
-# ------------------------------------------------------------------------------
-# get number of "no use" locations within each council district
-
 
 # ------------------------------------------------------------------------------
 # figure out the location within that district with the max number ppl who woud 

@@ -46,12 +46,12 @@ no_use = no_use %>%
 ################################################################################
 
 pal = colorFactor(
-  palette = carto_pal(5, "SunsetDark"),
+  palette = nycc_pal("mixed")(5),
   domain = no_use$usetype
 )
 
 map = leaflet(options = leafletOptions(zoomControl = FALSE, 
-                                       minZoom = 11, 
+                                       minZoom = 10, 
                                        maxZoom = 16)) %>%
   addProviderTiles('CartoDB.Positron', 
                    options = providerTileOptions(minZoom = 11, maxZoom = 16)) %>%
@@ -62,11 +62,16 @@ map = leaflet(options = leafletOptions(zoomControl = FALSE,
   addCircles(data = no_use, weight = 2, 
              radius = ~range01(new_users)*200, #75, #~sqrt(new_users)-5, 
              opacity = ~range01(new_users), fillOpacity = ~range01(new_users), 
-             color = ~pal(usetype), popup = ~label)
+             color = ~pal(usetype), popup = ~label) %>%
+  addCouncilStyle(add_dists = TRUE) %>%
+  addLegend(position = "topleft", pal = pal, 
+                       title = "Land Use Type",
+                       values = no_use$usetype, opacity = 1, 
+                       labFormat = labelFormat(transform = str_to_title))
 
 saveWidget(map, file=file.path('visuals', 
                                "potential_pool_locations.html"))
-mapshot(map, 
+mapview::mapshot(map, 
         file = file.path("visuals", "potential_pool_locations.png"),
         remove_controls = c("homeButton", "layersControl"), vwidth = 1000, vheight = 850)
 

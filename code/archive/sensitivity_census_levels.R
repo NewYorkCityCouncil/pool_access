@@ -103,19 +103,104 @@ pop_tract = get_decennial(geography = "tract",
                        year = 2020, 
                        geometry = T)
 
-tract_allocation = get_pop_overlap(pop_bg, pools_walk_zone_15min, council_districts)
+tract_allocation = get_pop_overlap(pop_tract, pools_walk_zone_15min, council_districts)
 
+
+################################################################################
+# county allocation
+################################################################################
+
+pop_county = get_decennial(geography = "county", 
+                          state = "NY",
+                          county = c("061", "081", "085", "005", "047"),
+                          variables = "P1_001N", 
+                          year = 2020, 
+                          geometry = T)
+
+county_allocation = get_pop_overlap(pop_county, pools_walk_zone_15min, council_districts)
+
+
+
+################################################################################
+# bbl allocation
+################################################################################
+
+get_pop_within = function(pop, pools_walk_zone_15min, council_districts) { 
+  # pull population info at block level for all relevant counties 
+  pop = pop %>%
+    st_transform(st_crs(4326))
+  
+  which_buildings_pool_zone = st_intersects(pools_walk_zone_15min, pop)[[1]]
+  buildings_pool_zone = pop[which_buildings_pool_zone, ]
+
+  # ------------------------------------------------------------------------------
+  # pull population for each city shape
+  
+  get_overlap_pop = function(x, population, col="pop") {
+    # where x is list of ids from pop
+    overlap_pop = population[x, ]
+    overlap_pop = sum(overlap_pop %>% pull(col))
+    return(overlap_pop)
+  }
+  
+  council_block_intersection = st_intersects(council_districts, 
+                                             buildings_pool_zone)
+  council_districts$pop_near_pool = sapply(council_block_intersection,
+                                           get_overlap_pop, 
+                                           population=buildings_pool_zone, 
+                                           col="pop_estimate_pluto")
+  
+  council_block_intersection = st_intersects(council_districts, pop)
+  council_districts$pop = sapply(council_block_intersection, get_overlap_pop, 
+                                 population=pop, col="pop_estimate_pluto")
+  council_districts$perc_near_pool = council_districts$pop_near_pool/council_districts$pop
+  
+  return(council_districts)
+  
+}
+
+pop_bbl = read_csv(file.path("data", "input", "bbl_population_estimates.csv")) %>%
+  st_as_sf(coords = c("longitude", "latitude"), crs = st_crs(4326)) %>%
+  select(pop_estimate_pluto)
+
+bbl_allocation = get_pop_within(pop_bbl, pools_walk_zone_15min, council_districts)
 
 ################################################################################
 # compare
 ################################################################################
 
 
+cor.test(b_allocation$perc_near_pool, bbl_allocation$perc_near_pool, 
+         method = 'spearman')
+cor(b_allocation$perc_near_pool, bbl_allocation$perc_near_pool)
+
+cor.test(county_allocation$perc_near_pool, bbl_allocation$perc_near_pool, 
+         method = 'spearman')
+cor(county_allocation$perc_near_pool, bbl_allocation$perc_near_pool)
+
 cor(b_allocation$perc_near_pool, bg_allocation$perc_near_pool)
 
 cor(b_allocation$perc_near_pool, tract_allocation$perc_near_pool)
 
 cor(bg_allocation$perc_near_pool, tract_allocation$perc_near_pool)
+
+cor.test(tract_allocation$perc_near_pool, bbl_allocation$perc_near_pool, 
+         method = 'spearman')
+cor(tract_allocation$perc_near_pool, bbl_allocation$perc_near_pool)
+
+
+ggplot() + 
+  geom_point(aes(bbl_allocation$perc_near_pool, bg_allocation$perc_near_pool)) + 
+  xlab("BBL allocation") + ylab("Block allocation") + ylim(0, 1)
+
+ggplot() + 
+  geom_point(aes(bbl_allocation$perc_near_pool, tract_allocation$perc_near_pool)) + 
+  xlab("BBL allocation") + ylab("Tract allocation") + ylim(0, 1)
+
+
+ggplot() + 
+  geom_point(aes(bbl_allocation$perc_near_pool, county_allocation$perc_near_pool)) + 
+  xlab("BBL allocation") + ylab("County allocation") + ylim(0, 1)
 
 ggplot() + 
   geom_point(aes(b_allocation$perc_near_pool, bg_allocation$perc_near_pool)) + 
@@ -128,3 +213,4 @@ ggplot() +
 ggplot() + 
   geom_point(aes(bg_allocation$perc_near_pool, tract_allocation$perc_near_pool)) + 
   xlab("Block group allocation") + ylab("Tract allocation")
+
