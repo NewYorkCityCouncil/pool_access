@@ -36,9 +36,13 @@ no_use = no_use %>%
   mutate(label = paste0("<strong>Agency</strong>: ", agency, "<br>",
                         "<strong>Parcel Name:</strong> ", parcelname, "<br>", 
                         "<strong>Use:</strong> ", usetype, "<br>",
-                        "<strong># of people within <15 min, who don't have pool access:</strong> ", 
+                        "<strong># of people within 15 min walk, <br> who currently don't have pool access:</strong> ", 
                         format(round(new_users/100)*100, big.mark = ","))) %>%
   st_filter(interest_area)
+
+pools_by_district = st_intersects(council_districts, pools)
+pools_by_district = sapply(pools_by_district, length)
+council_districts$num_pools = pools_by_district
 
 
 ################################################################################
@@ -46,28 +50,26 @@ no_use = no_use %>%
 ################################################################################
 
 pal = colorFactor(
-  palette = nycc_pal("mixed")(5),
+  palette = nycc_pal("warm")(5),
   domain = no_use$usetype
 )
 
-map = leaflet(options = leafletOptions(zoomControl = FALSE, 
-                                       minZoom = 10, 
-                                       maxZoom = 16)) %>%
-  addProviderTiles('CartoDB.Positron', 
-                   options = providerTileOptions(minZoom = 11, maxZoom = 16)) %>%
+map = leaflet() %>%
   addPolygons(data = interest_area, weight = 0, col = 'grey') %>%
   addCircles(data = pools, weight = 3, radius = 50, col = '#3498DB', 
              opacity = 1, fillOpacity = 1) %>%
-  addPolygons(data = council_districts, weight = 1, col = '#686868', fillOpacity = 0) %>%
-  addCircles(data = no_use, weight = 2, 
-             radius = ~range01(new_users)*200, #75, #~sqrt(new_users)-5, 
-             opacity = ~range01(new_users), fillOpacity = ~range01(new_users), 
-             color = ~pal(usetype), popup = ~label) %>%
   addCouncilStyle(add_dists = TRUE) %>%
+  addPolygons(data = councildown:::dists[councildown:::dists$coun_dist %in% 
+                                           council_districts$CounDist[council_districts$num_pools == 0]], 
+              )
+  addCircles(data = no_use, weight = 2, 
+             radius = ~range01(new_users)*250, #75, #~sqrt(new_users)-5, 
+             opacity = ~range01(new_users), fillOpacity = ~range01(new_users), 
+             color = ~pal(usetype), popup = ~label, stroke = F) %>%
   addLegend(position = "topleft", pal = pal, 
-                       title = "Land Use Type",
-                       values = no_use$usetype, opacity = 1, 
-                       labFormat = labelFormat(transform = str_to_title))
+            title = "Land Use Type",
+            values = no_use$usetype, opacity = 1, 
+            labFormat = labelFormat(transform = str_to_title))
 
 saveWidget(map, file=file.path('visuals', 
                                "potential_pool_locations.html"))

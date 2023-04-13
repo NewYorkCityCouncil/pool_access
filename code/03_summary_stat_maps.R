@@ -43,24 +43,24 @@ pools_by_district = sapply(pools_by_district, length)
 council_districts$num_pools = pools_by_district
 
 pal = colorFactor(
-  palette = c("#CACACA", nycc_pal("warm")(4)),
+  palette = c("#CACACA", rev(nycc_pal("cool")(4))),
   domain = council_districts$num_pools
 )
 
-map = leaflet(options = leafletOptions(zoomControl = FALSE, 
-                                 minZoom = 10, 
-                                 maxZoom = 16)) %>% 
+map = leaflet() %>% 
   addPolygons(data = council_districts, weight = 0, color = ~pal(num_pools), 
-              fillOpacity = 0.8) %>% 
-  addCouncilStyle(add_dists = TRUE) %>%
+              fillOpacity = 1, smoothFactor = 0) %>% 
+  addCouncilStyle(add_dists = TRUE, 
+                  highlight_dists = council_districts$CounDist[council_districts$num_pools > 3]) %>%
   addLegend_decreasing(position = "topleft", pal = pal, 
             title = "Number of Pools",
             values = sort(unique(council_districts$num_pools)), opacity = 1, 
-            decreasing = T)
+            decreasing = T) 
 
 mapview::mapshot(map, 
-        file = file.path("visuals", "pool_count_by_council_district.png"),
-        remove_controls = c("homeButton", "layersControl"), vwidth = 1000, vheight = 850)
+        file = file.path("visuals", "pool_count_by_council_district.pdf"),
+        remove_controls = c("homeButton", "layersControl", "zoomControl"), 
+        vwidth = 1000, vheight = 850)
 
 
 # ------------------------------------------------------------------------------
@@ -122,21 +122,21 @@ council_districts$perc_near_pool = council_districts$pop_near_pool/council_distr
 
 
 # prep for plotting
-pal = colorNumeric(
+pal = colorBin(
   palette = colorRamp(rev(nycc_pal("cool")(12))),
   domain = c(0, 1),
+  bins = c(0, .2, .4, .6, .8, 1),
   na.color = "transparent"
 )
 
 popup = paste0("<strong>% within 15 min walk of a pool: </strong>", 
                       round(council_districts$perc_near_pool*100, 0), "%")
 
-map = leaflet(options = leafletOptions(zoomControl = FALSE, 
-                                 minZoom = 10, 
-                                 maxZoom = 16)) %>% 
+map = leaflet() %>% 
   addPolygons(data = council_districts, weight = 0, color = ~pal(perc_near_pool), 
-              fillOpacity = 0.8, popup = popup) %>% 
-  addCouncilStyle(add_dists = TRUE) %>%
+              fillOpacity = 1, popup = popup, smoothFactor = 0) %>% 
+  addCouncilStyle(add_dists = TRUE, 
+                  highlight_dists = council_districts$CounDist[council_districts$perc_near_pool >= .6]) %>%
   addLegend_decreasing(position = "topleft", pal = pal, 
             title = paste0("% of population that has access to <br>", 
                            "a pool within a 15 minute walk"),  
@@ -145,8 +145,9 @@ map = leaflet(options = leafletOptions(zoomControl = FALSE,
                                     suffix = "%"))
 
 mapview::mapshot(map, 
-        file = file.path("visuals", "perc_pool_access_by_council_district.png"),
-        remove_controls = c("homeButton", "layersControl"), vwidth = 1000, vheight = 850)
+        file = file.path("visuals", "perc_pool_access_by_council_district.pdf"),
+        remove_controls = c("homeButton", "layersControl", "zoomControl"), 
+        vwidth = 1000, vheight = 850)
 
 
 # ------------------------------------------------------------------------------
@@ -157,32 +158,30 @@ nouse_by_district = st_intersects(council_districts, no_use)
 nouse_by_district = sapply(nouse_by_district, length)
 
 council_districts$num_nouse = nouse_by_district 
-council_districts$capped_num_nouse = ifelse(council_districts$num_nouse > 100, 
-                                            100, council_districts$num_nouse)
 
 # prep for plotting
-pal = colorNumeric(
+pal = colorBin(
   palette = colorRamp(rev(nycc_pal("cool")(12))),
-  domain = c(0, 100),
+  domain = council_districts$num_nouse,
+  bins = c(0, 10, 20, 50, 100, 450),
   na.color = "transparent"
 )
 
-map = leaflet(options = leafletOptions(zoomControl = FALSE, 
-                                 minZoom = 10, 
-                                 maxZoom = 16)) %>% 
-  addPolygons(data = council_districts, weight = 0, color = ~pal(capped_num_nouse), 
-              fillOpacity = 0.8) %>% 
-  addCouncilStyle(add_dists = TRUE) %>%
+map = leaflet() %>% 
+  addPolygons(data = council_districts, weight = 0, color = ~pal(num_nouse), 
+              fillOpacity = 1, smoothFactor = 0) %>% 
+  addCouncilStyle(add_dists = TRUE, 
+                  highlight_dists = council_districts$CounDist[council_districts$num_nouse >= 50]) %>%
   addLegend_decreasing(position = "topleft", pal = pal, 
             values = council_districts$capped_num_nouse,
             title = paste0("Number of 'no use' city  <br>", 
                            "owned properties in district"), 
-            labels = c(">100", "80", "60", "40", "20", "0"),
             opacity = 1, decreasing = T)
 
 mapview::mapshot(map, 
-        file = file.path("visuals", "number_no_use_by_council_district.png"),
-        remove_controls = c("homeButton", "layersControl"), vwidth = 1000, vheight = 850)
+        file = file.path("visuals", "number_no_use_by_council_district.pdf"),
+        remove_controls = c("homeButton", "layersControl", "zoomControl"), 
+        vwidth = 1000, vheight = 850)
 
 
 ################################################################################
