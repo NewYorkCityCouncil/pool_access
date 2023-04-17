@@ -21,8 +21,7 @@ ej_areas = st_read("https://data.cityofnewyork.us/api/geospatial/ykru-djh7?metho
   filter(ejdesignat %in% c("EJ Area", "Potential EJ Area")) %>%
   st_union()
 
-council_districts = unzip_sf("https://www.nyc.gov/assets/planning/download/zip/data-maps/open-data/nycc_21d.zip") %>%
-  st_read() %>%
+council_districts = councildown:::dists %>%
   st_transform(st_crs(4326))
 
 ################################################################################
@@ -55,21 +54,18 @@ pal = colorFactor(
 )
 
 map = leaflet() %>%
-  addPolygons(data = interest_area, weight = 0, col = 'grey') %>%
+  addPolygons(data = interest_area, weight = 0, col = 'grey', smoothFactor = 0) %>%
   addCircles(data = pools, weight = 3, radius = 50, col = '#3498DB', 
-             opacity = 1, fillOpacity = 1) %>%
-  addCouncilStyle(add_dists = TRUE) %>%
-  addPolygons(data = councildown:::dists[councildown:::dists$coun_dist %in% 
-                                           council_districts$CounDist[council_districts$num_pools == 0]], 
-              )
+             opacity = 1, fillOpacity = 1, popup = ~name) %>%
   addCircles(data = no_use, weight = 2, 
              radius = ~range01(new_users)*250, #75, #~sqrt(new_users)-5, 
-             opacity = ~range01(new_users), fillOpacity = ~range01(new_users), 
-             color = ~pal(usetype), popup = ~label, stroke = F) %>%
-  addLegend(position = "topleft", pal = pal, 
-            title = "Land Use Type",
-            values = no_use$usetype, opacity = 1, 
-            labFormat = labelFormat(transform = str_to_title))
+             opacity = ~range01(new_users), fillOpacity = ~range01(new_users),
+             popup = ~label, stroke = F, color = unname(councildown:::warm[4])) %>%
+  addCouncilStyle(add_dists = TRUE) %>%
+  addPolygons(data = councildown:::dists[councildown:::dists$coun_dist %in% 
+                                           council_districts$CounDist[council_districts$num_pools == 0], ], 
+              col = unname(councildown:::nycc_colors[1]), weight = 2, 
+              fillOpacity = 0, opacity = 1, smoothFactor = 0)
 
 saveWidget(map, file=file.path('visuals', 
                                "potential_pool_locations.html"))
