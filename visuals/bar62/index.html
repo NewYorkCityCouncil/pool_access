@@ -29,7 +29,7 @@
       data: {
         labels: data.xs,
         datasets: [{
-          label: 'Percentage of Borough Utilizing SNAP Program, by Borough',
+          label: 'People Per Pool, by Borough',
           data: data.ys,
           fill: false,
           backgroundColor: '#2F56A6',
@@ -46,7 +46,7 @@
         cornerRadius: 20,
         title:{
           display: false,
-          text: 'Percentage of Borough Utilizing SNAP Program, by Borough'
+          text: 'People Per Pool, by Borough'
         },
         scales: {
           xAxes: [{
@@ -74,7 +74,7 @@
               //fontStyle: 'strong',
               //fontSize: '10',
               callback: function(value, index, values) {
-                return + value.toLocaleString('en-US')+' %';
+                return + value.toLocaleString('en-US');
               },
                 beginAtZero: true,
             },
@@ -83,17 +83,17 @@
             },
             scaleLabel: {
               display: true,
-              labelString: '% of Borough Utilizing SNAP Program'
+              labelString: 'People Per Pool, by Borough'
             }
           }]
         },
         tooltips: {
           callbacks: {
             title: function(tooltipItems, data) {
-            return 'Percentage of Population Utilizing SNAP Program: '+ tooltipItems[0].xLabel.toLocaleString('en-US');
+            return 'People Per Pool: '+ tooltipItems[0].xLabel.toLocaleString('en-US');
           },
             label: function(tooltipItem, data) {
-              return data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].toLocaleString('en-US')+ ' %';
+              return data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].toLocaleString('en-US')+ ' People Per Pool';
             },
           },
           backgroundColor: '#434343',
@@ -110,7 +110,7 @@
     const xs = [];
     const ys = [];
 
-    const response = await fetch('snap_dec_2022_ by_borough.csv');
+    const response = await fetch('NYC_Parks_Pools_Borough.csv');
     const data = await response.text();
 
     const table = data.split('\n').slice(1);
@@ -118,7 +118,7 @@
       const columns = row.split(',');
       const one = columns[0];
       xs.push(one);
-      const two = columns[1];
+      const two = columns[3];
       ys.push(parseFloat(two)); //make data from string to number 
       console.log(one, two);
     });
