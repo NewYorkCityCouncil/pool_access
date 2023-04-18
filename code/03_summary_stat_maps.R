@@ -51,7 +51,7 @@ map = leaflet() %>%
   addPolygons(data = council_districts, weight = 0, color = ~pal(num_pools), 
               fillOpacity = 1, smoothFactor = 0) %>% 
   addCouncilStyle(add_dists = TRUE, 
-                  highlight_dists = council_districts$CounDist[council_districts$num_pools > 3]) %>%
+                  highlight_dists = council_districts$CounDist[council_districts$num_pools >= 3]) %>%
   addLegend_decreasing(position = "topleft", pal = pal, 
             title = "Number of Pools",
             values = sort(unique(council_districts$num_pools)), opacity = 1, 
@@ -136,7 +136,7 @@ map = leaflet() %>%
   addPolygons(data = council_districts, weight = 0, color = ~pal(perc_near_pool), 
               fillOpacity = 1, popup = popup, smoothFactor = 0) %>% 
   addCouncilStyle(add_dists = TRUE, 
-                  highlight_dists = council_districts$CounDist[council_districts$perc_near_pool >= .6]) %>%
+                  highlight_dists = council_districts$CounDist[council_districts$perc_near_pool >= .4]) %>%
   addLegend_decreasing(position = "topleft", pal = pal, 
             title = paste0("% of population that has access to <br>", 
                            "a pool within a 15 minute walk"),  
@@ -212,7 +212,8 @@ council_districts %>%
   mutate(perc_near_pool = round(perc_near_pool*100, 0), 
          max_pop_impact = format(round(max_pop_impact, 0), big.mark=",")) %>%
   select(CounDist, num_pools, num_nouse, perc_near_pool, max_pop_impact) %>%
-  arrange(CounDist) %>% 
+  arrange(CounDist)  %>%
+  mutate(perc_near_pool = paste0(perc_near_pool, "%")) %>% 
   rename(`Council District` = CounDist, 
          `# of Pools` = num_pools, 
          `# "No Use" City Owned Parcels` = num_nouse, 
