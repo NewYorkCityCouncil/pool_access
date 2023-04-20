@@ -47,18 +47,21 @@ perc_access = pop %>%
 perc_access_borough = pop %>%
   mutate(borough = str_extract(NAME, "[A-Za-z ]* County") %>% trimws(), 
          borough = gsub(" County", "", borough), 
-         borough = gsub("Richmond", "Staten Island", borough)) %>%
+         borough = case_when(borough == "Kings" ~ "Brooklyn", 
+                             borough == "New York" ~ "Manhattan", 
+                             borough == "Richmond" ~ "Staten Island", 
+                             T ~ borough)) %>%
   group_by(borough) %>%
-  summarise(perc_pop_no_pool = sum(pop)/sum(tot_pop))
+  summarise(perc_pop_no_pool = (sum(tot_pop) - sum(pop))/sum(tot_pop))
 
 col_chart = ggplot(perc_access_borough) + 
   geom_col_interactive(aes(borough, perc_pop_no_pool*100, 
-                           tooltip = paste0(perc_pop_no_pool*100, "%")), 
+                           tooltip = paste0(round(perc_pop_no_pool*100, 0), "%")), 
                        color = "#2F56A6", fill = "#2F56A6") + 
   theme_fivethirtyeight() + 
   theme(rect = element_rect(fill = "white", linetype = 0, colour = NA), 
         axis.title.y = element_text()) + 
-  ylab("% of Borough without a pool <15 minute walk away")
+  ylab("% of Borough with a pool <15 minute walk away")
 
 tooltip_css = "background-color:#CACACA;"
 
