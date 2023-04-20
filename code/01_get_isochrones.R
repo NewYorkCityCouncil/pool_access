@@ -17,7 +17,6 @@ source("../tokens.R")
 pools = st_read("https://data.cityofnewyork.us/api/geospatial/y5rm-wagw?method=export&format=GeoJSON") %>%
   st_transform(st_crs(4326)) %>%
   st_centroid() %>%
-  
   # only keep one pool per property number (ie we don't want to count pools + 
   #   wading pools as separate when they're at the same location)
   group_by(gispropnum) %>%
