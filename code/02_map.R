@@ -76,7 +76,7 @@ map = leaflet() %>%
   addCouncilStyle(add_dists = TRUE) %>%
   addCircles(data = pools, weight = 3, radius = 50, col = '#3498DB', 
              opacity = 1, fillOpacity = 1, popup = ~name) %>%
-  addCircles(data = no_use, radius = 110, 
+  addCircles(data = no_use, radius = 130, 
             fillOpacity = 1, fillColor = ~pal2(new_users), 
             opacity = 1, color = "#660000", weight = 0.5,
             popup = ~label) %>%
@@ -98,7 +98,7 @@ map = leaflet() %>%
 saveWidget(map, file=file.path('visuals', 
                                "potential_pool_locations.html"))
 mapview::mapshot(map, 
-        file = file.path("visuals", "potential_pool_locations.png"),
+        file = file.path("visuals", "potential_pool_locations.pdf"),
         remove_controls = c("homeButton", "layersControl", "zoomControl"), vwidth = 1000, vheight = 850)
 
 

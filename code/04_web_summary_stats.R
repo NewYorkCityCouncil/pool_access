@@ -44,8 +44,17 @@ borough_count = pools %>%
                              borough == "R" ~ "Staten Island"))
 
 col_chart = ggplot(borough_count) + 
-  geom_col(aes(borough, count)) + 
-  xlab("Borough") + ylab("Number of Pools") + 
-  theme_nycc()
-ggsave(file.path("visuals", "pool_col_chart.png"), col_chart, 
-       width = 6, height = 4)
+  geom_col_interactive(aes(borough, count, tooltip = count), 
+                       color = "#2F56A6", fill = "#2F56A6") + 
+  theme_fivethirtyeight() + 
+  theme(rect = element_rect(fill = "white", linetype = 0, colour = NA), 
+        axis.title.y = element_text()) + 
+  ylab("Number of Pools")
+
+tooltip_css = "background-color:#CACACA;"
+
+plot_interactive = girafe(ggobj = col_chart,   
+                           width_svg = 9,
+                           height_svg = 5, 
+                           options = list(opts_tooltip(css = tooltip_css)))
+save_html(plot_interactive, file.path("visuals", "borough_pool_count.html"))
