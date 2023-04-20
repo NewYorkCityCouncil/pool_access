@@ -74,16 +74,16 @@ map = leaflet() %>%
   addPolygons(data = interest_area, weight = 0, col = 'grey', 
               fillOpacity = 0.15) %>%
   addCouncilStyle(add_dists = TRUE) %>%
-  addCircles(data = pools, weight = 3, radius = 50, col = '#3498DB', 
-             opacity = 1, fillOpacity = 1, popup = ~name) %>%
-  addCircles(data = no_use, radius = 130, 
-            fillOpacity = 1, fillColor = ~pal2(new_users), 
-            opacity = 1, color = "#660000", weight = 0.5,
-            popup = ~label) %>%
   addPolygons(data = councildown:::dists[councildown:::dists$coun_dist %in% 
                                            council_districts$coun_dist[council_districts$num_pools == 0], ], 
               col = unname(councildown:::nycc_colors[1]), weight = 1.5, 
               fillOpacity = 0, opacity = 1) %>%
+  addCircles(data = pools, weight = 3, radius = 75, col = '#3498DB', 
+             opacity = 1, fillOpacity = 1, popup = ~name) %>%
+  addCircles(data = no_use, radius = 130, 
+            fillOpacity = 1, fillColor = ~pal2(new_users), 
+            opacity = 1, color = "#660000", weight = 0.5,
+            popup = ~label) %>% 
   addLegend_decreasing(position="topleft", pal, 
                        values = c("existing pool", 
                                   "area that is both >15 minute walk from a pool <br>&emsp;&emsp;and an Environmental Justice area", 

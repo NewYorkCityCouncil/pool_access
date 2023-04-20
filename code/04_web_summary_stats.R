@@ -28,6 +28,46 @@ council_districts = unzip_sf("https://www.nyc.gov/assets/planning/download/zip/d
   st_read() %>%
   st_transform(st_crs(4326))
 
+################################################################################
+# simple pool count
+################################################################################
+
+raw_pools_data = st_read("https://data.cityofnewyork.us/api/geospatial/y5rm-wagw?method=export&format=GeoJSON")
+nrow(raw_pools_data)
+
+################################################################################
+# pop w/o access to pools
+################################################################################
+
+pop = readRDS(file.path("data", "output", "block_population.RDS")) %>%
+  st_drop_geometry() 
+perc_access = pop %>%
+  summarise(perc_pop_no_pool = sum(pop)/sum(tot_pop))
+
+perc_access_borough = pop %>%
+  mutate(borough = str_extract(NAME, "[A-Za-z ]* County") %>% trimws(), 
+         borough = gsub(" County", "", borough), 
+         borough = gsub("Richmond", "Staten Island", borough)) %>%
+  group_by(borough) %>%
+  summarise(perc_pop_no_pool = sum(pop)/sum(tot_pop))
+
+col_chart = ggplot(perc_access_borough) + 
+  geom_col_interactive(aes(borough, perc_pop_no_pool*100, 
+                           tooltip = paste0(perc_pop_no_pool*100, "%")), 
+                       color = "#2F56A6", fill = "#2F56A6") + 
+  theme_fivethirtyeight() + 
+  theme(rect = element_rect(fill = "white", linetype = 0, colour = NA), 
+        axis.title.y = element_text()) + 
+  ylab("% of Borough without a pool <15 minute walk away")
+
+tooltip_css = "background-color:#CACACA;"
+
+plot_interactive = girafe(ggobj = col_chart,   
+                          width_svg = 8,
+                          height_svg = 5, 
+                          options = list(opts_tooltip(css = tooltip_css)))
+save_html(plot_interactive, file.path("visuals", "borough_pool_access.html"))
+
 
 ################################################################################
 # pools by borough bar chart
@@ -54,7 +94,7 @@ col_chart = ggplot(borough_count) +
 tooltip_css = "background-color:#CACACA;"
 
 plot_interactive = girafe(ggobj = col_chart,   
-                           width_svg = 9,
+                           width_svg = 8,
                            height_svg = 5, 
                            options = list(opts_tooltip(css = tooltip_css)))
 save_html(plot_interactive, file.path("visuals", "borough_pool_count.html"))

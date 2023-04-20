@@ -79,8 +79,8 @@ land_walk_zone_15min = bind_rows(land_walk_zone_15min)
 # get population from census and blank out any population within a pool isochrone
 
 # load api key
-census_api_key(census_token, install = T)
-readRenviron("~/.Renviron")
+#census_api_key(census_token, install = T)
+#readRenviron("~/.Renviron")
 
 # pull population info at block level for all relevant counties 
 pop = get_decennial(geography = "block", 
@@ -106,11 +106,12 @@ pop = pop %>%
          area_within_pool_zone = replace_na(area_within_pool_zone, 0), 
          perc_area = (total_area - area_within_pool_zone)/total_area,
          
-         # get rid of tiny measurement errors like -0.000000000001
+         # get rid of tiny measurement errors like -0.000000001
          perc_area = ifelse(perc_area < 0, 0, perc_area), 
          
          # scale pop by (assumed) % not in zone
-         pop = value * perc_area) %>%
+         pop = value * perc_area, 
+         tot_pop = value) %>%
   select(-total_area, -area_within_pool_zone, -value)
 
 
@@ -132,6 +133,7 @@ no_use$new_users = sapply(intersection, get_overlap_pop, population=pop)
 # save data for plotting
 ################################################################################
 
+saveRDS(pop, file.path("data", "output", "block_population.RDS"))
 saveRDS(pools, file.path("data", "output", "pools.RDS"))
 saveRDS(pools_walk_zone_15min, file.path("data", "output", "pools_walk_zone_15min.RDS"))
 saveRDS(no_use, file.path("data", "output", "no_use_city_property.RDS"))
