@@ -47,14 +47,47 @@ council_districts$num_pools = pools_by_district
 
 
 ################################################################################
-# plot
+# plot existing pools locations
+################################################################################
+
+pal = colorFactor(
+  palette = c("grey", "#2F56A6"),
+  domain = c("Council District with no pool", 
+             "Existing Parks Pool")
+) 
+
+pools$tooltip = paste0("<strong>Name:</strong> ", pools$name, 
+                       "<br><strong>Type:</strong> ", pools$pooltype, 
+                       "<br><strong>Location:</strong> ", pools$location)
+
+map = leaflet(options = leafletOptions(attributionControl=FALSE, 
+                                 zoomControl = FALSE, 
+                                 minZoom = 10, 
+                                 maxZoom = 15)) %>%
+  addCouncilStyle(add_dists = TRUE) %>%
+  addPolygons(data = councildown:::dists[councildown:::dists$coun_dist %in% 
+                                           council_districts$coun_dist[council_districts$num_pools == 0], ], 
+              fillOpacity = 0.2,  fillColor="grey", opacity = 0,
+              group = "Council Districts with no Pools") %>%
+  addCircles(data = pools, weight = 3, radius = 135, col = '#2F56A6', 
+           opacity = 1, fillOpacity = 1, popup = ~tooltip) %>%
+  addLegend_decreasing(position="topleft", pal, 
+                       values = c("Council District with no pool", 
+                                  "Existing Parks Pool"), 
+                       opacity = 1)
+
+saveWidget(map, file=file.path('visuals', 
+                               "existing_pool_locations.html"))
+
+
+################################################################################
+# plot no use locations 
 ################################################################################
 
 #dot_color = unname(councildown:::warm[3])
 pal = colorFactor(
-  palette = c("lightgrey", "#2F56A6", "#3498DB"),
+  palette = c("lightgrey", "#3498DB"),
   domain = c("existing pool", 
-             "council districts that currently have no pool", 
              "area that is both >15 minute walk from a pool <br>&emsp;&emsp;and an Environmental Justice area")
 ) 
 
@@ -77,14 +110,8 @@ map = leaflet(options = leafletOptions(attributionControl=FALSE,
   addPolygons(data = interest_area, weight = 0, col = 'grey', 
               fillOpacity = 0.15) %>%
   addCouncilStyle(add_dists = TRUE) %>%
-  addPolygons(data = councildown:::dists[councildown:::dists$coun_dist %in% 
-                                           council_districts$coun_dist[council_districts$num_pools == 0], ], 
-              col = unname(councildown:::nycc_colors[1]), weight = 1.5, 
-              fillOpacity = 0, opacity = 1, 
-              group = "Council Districts with no Pools") %>%
   addCircles(data = pools, weight = 3, radius = 75, col = '#3498DB', 
-             opacity = 1, fillOpacity = 1, popup = ~name, 
-             group = "Existing Parks Pools") %>%
+             opacity = 1, fillOpacity = 1, popup = ~name) %>%
   addCircles(data = no_use, radius = 130, 
             fillOpacity = 0.5, fillColor = ~pal2(new_users), 
             opacity = 0.5, color = "#660000", weight = 0.5,
@@ -101,11 +128,7 @@ map = leaflet(options = leafletOptions(attributionControl=FALSE,
                                       
                                       People who don't have pool access<br>", 
                                       "that would gain access if a pool <br>", 
-                                      "were constructed at this location")) %>%
-  addLayersControl(
-    overlayGroups = c("Council Districts with no Pools", "Existing Parks Pools", 
-                      "Potential Pool Locations"),
-    options = layersControlOptions(collapsed = T))
+                                      "were constructed at this location"))
 
 saveWidget(map, file=file.path('visuals', 
                                "potential_pool_locations.html"))
