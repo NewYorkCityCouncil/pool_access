@@ -70,20 +70,26 @@ pal2 = colorBin(
   domain = no_use$new_users
 ) 
 
-map = leaflet() %>%
+map = leaflet(options = leafletOptions(attributionControl=FALSE, 
+                                       zoomControl = FALSE, 
+                                       minZoom = 10, 
+                                       maxZoom = 15)) %>%
   addPolygons(data = interest_area, weight = 0, col = 'grey', 
               fillOpacity = 0.15) %>%
   addCouncilStyle(add_dists = TRUE) %>%
   addPolygons(data = councildown:::dists[councildown:::dists$coun_dist %in% 
                                            council_districts$coun_dist[council_districts$num_pools == 0], ], 
               col = unname(councildown:::nycc_colors[1]), weight = 1.5, 
-              fillOpacity = 0, opacity = 1) %>%
+              fillOpacity = 0, opacity = 1, 
+              group = "Council Districts with no Pools") %>%
   addCircles(data = pools, weight = 3, radius = 75, col = '#3498DB', 
-             opacity = 1, fillOpacity = 1, popup = ~name) %>%
+             opacity = 1, fillOpacity = 1, popup = ~name, 
+             group = "Existing Parks Pools") %>%
   addCircles(data = no_use, radius = 130, 
-            fillOpacity = 1, fillColor = ~pal2(new_users), 
-            opacity = 1, color = "#660000", weight = 0.5,
-            popup = ~label) %>% 
+            fillOpacity = 0.5, fillColor = ~pal2(new_users), 
+            opacity = 0.5, color = "#660000", weight = 0.5,
+            popup = ~label, 
+            group = "Potential Pool Locations") %>% 
   addLegend_decreasing(position="topleft", pal, 
                        values = c("existing pool", 
                                   "area that is both >15 minute walk from a pool <br>&emsp;&emsp;and an Environmental Justice area", 
@@ -91,9 +97,15 @@ map = leaflet() %>%
                        opacity = 1) %>%
   addLegend_decreasing(position="topleft", pal2, values = no_use$new_users, 
                        opacity = 1, decreasing = T, 
-                       title = paste0("People who don't have pool access<br>", 
+                       title = paste0("Gain access for those without existing access 
+                                      
+                                      People who don't have pool access<br>", 
                                       "that would gain access if a pool <br>", 
-                                      "were constructed at this location"))
+                                      "were constructed at this location")) %>%
+  addLayersControl(
+    overlayGroups = c("Council Districts with no Pools", "Existing Parks Pools", 
+                      "Potential Pool Locations"),
+    options = layersControlOptions(collapsed = T))
 
 saveWidget(map, file=file.path('visuals', 
                                "potential_pool_locations.html"))
