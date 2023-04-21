@@ -29,11 +29,19 @@ council_districts = unzip_sf("https://www.nyc.gov/assets/planning/download/zip/d
   st_transform(st_crs(4326))
 
 ################################################################################
-# simple pool count
+# simple pool count (before the grouping by location)
 ################################################################################
 
 raw_pools_data = st_read("https://data.cityofnewyork.us/api/geospatial/y5rm-wagw?method=export&format=GeoJSON")
 nrow(raw_pools_data)
+
+
+################################################################################
+#  pool count (after the grouping by location)
+################################################################################
+
+nrow(pools)
+
 
 ################################################################################
 # pop w/o access to pools
@@ -76,7 +84,7 @@ save_html(plot_interactive, file.path("visuals", "borough_pool_access.html"))
 # pools by borough bar chart
 ################################################################################
 
-borough_count = pools %>% 
+borough_count = raw_pools_data %>% 
   st_drop_geometry() %>%
   group_by(borough) %>%
   summarise(count = n()) %>%
@@ -86,18 +94,4 @@ borough_count = pools %>%
                              borough == "X" ~ "Bronx", 
                              borough == "R" ~ "Staten Island"))
 
-col_chart = ggplot(borough_count) + 
-  geom_col_interactive(aes(borough, count, tooltip = count), 
-                       color = "#2F56A6", fill = "#2F56A6") + 
-  theme_fivethirtyeight() + 
-  theme(rect = element_rect(fill = "white", linetype = 0, colour = NA), 
-        axis.title.y = element_text()) + 
-  ylab("Number of Pools")
-
-tooltip_css = "background-color:#CACACA;"
-
-plot_interactive = girafe(ggobj = col_chart,   
-                           width_svg = 8,
-                           height_svg = 5, 
-                           options = list(opts_tooltip(css = tooltip_css)))
-save_html(plot_interactive, file.path("visuals", "borough_pool_count.html"))
+print(borough_count)

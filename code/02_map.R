@@ -81,12 +81,11 @@ saveWidget(map, file=file.path('visuals',
 
 
 ################################################################################
-# plot no use locations 
+# plot city no use land locations 
 ################################################################################
 
-#dot_color = unname(councildown:::warm[3])
 pal = colorFactor(
-  palette = c("lightgrey", "#3498DB"),
+  palette = c("lightgrey", "#2F56A6"),
   domain = c("existing pool", 
              "area that is both >15 minute walk from a pool <br>&emsp;&emsp;and an Environmental Justice area")
 ) 
@@ -96,8 +95,6 @@ breaks[length(breaks)] = breaks[length(breaks)] + 5000
 reds = c("#ff0000", "#ff8080", "#ffbfbf", "#ffe6e6")
 
 pal2 = colorBin(
-  #palette = sequential_hcl(5, h = c(0, 0), c = c(100), l = c(5, 95), 
-  #                         rev = TRUE, power = 1),
   palette = rev(colorRampPalette(reds)(5)),
   bins = round(breaks/5000) * 5000,
   domain = no_use$new_users
@@ -110,25 +107,21 @@ map = leaflet(options = leafletOptions(attributionControl=FALSE,
   addPolygons(data = interest_area, weight = 0, col = 'grey', 
               fillOpacity = 0.15) %>%
   addCouncilStyle(add_dists = TRUE) %>%
-  addCircles(data = pools, weight = 3, radius = 75, col = '#3498DB', 
+  addCircles(data = pools, weight = 3, radius = 75, col = '#2F56A6', 
              opacity = 1, fillOpacity = 1, popup = ~name) %>%
   addCircles(data = no_use, radius = 130, 
-            fillOpacity = 0.5, fillColor = ~pal2(new_users), 
-            opacity = 0.5, color = "#660000", weight = 0.5,
+            fillOpacity = 1, fillColor = ~pal2(new_users), 
+            opacity = 1, color = "#660000", weight = 0.5,
             popup = ~label, 
             group = "Potential Pool Locations") %>% 
   addLegend_decreasing(position="topleft", pal, 
                        values = c("existing pool", 
-                                  "area that is both >15 minute walk from a pool <br>&emsp;&emsp;and an Environmental Justice area", 
-                                  "council districts that currently have no pool"), 
+                                  "area that is both >15 minute walk from a pool <br>&emsp;&emsp;and an Environmental Justice area"), 
                        opacity = 1) %>%
   addLegend_decreasing(position="topleft", pal2, values = no_use$new_users, 
                        opacity = 1, decreasing = T, 
-                       title = paste0("Gain access for those without existing access 
-                                      
-                                      People who don't have pool access<br>", 
-                                      "that would gain access if a pool <br>", 
-                                      "were constructed at this location"))
+                       title = paste0("People who would gain access if a <br>", 
+                                      "pool were built at this location"))
 
 saveWidget(map, file=file.path('visuals', 
                                "potential_pool_locations.html"))

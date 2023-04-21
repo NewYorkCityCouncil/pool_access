@@ -48,7 +48,7 @@ pal = colorFactor(
 )
 
 map = leaflet() %>% 
-  addPolygons(data = council_districts, color = ~pal(num_pools)) %>% 
+  councildown::addPolygons(data = council_districts, color = ~pal(num_pools), opacity = 1,) %>% 
   addCouncilStyle(add_dists = TRUE, 
                   highlight_dists = council_districts$CounDist[council_districts$num_pools >= 3]) %>%
   addLegend_decreasing(position = "topleft", pal = pal, 
@@ -68,9 +68,9 @@ mapview::mapshot(map,
 # ------------------------------------------------------------------------------
 
 # load api key
-census_api_key(census_token, install = T)
+#census_api_key(census_token, install = T)
 options(tigris_use_cache = TRUE)
-readRenviron("~/.Renviron")
+#readRenviron("~/.Renviron")
 
 # pull population info at block level for all relevant counties 
 pop = get_decennial(geography = "block", 
@@ -131,7 +131,7 @@ pal = colorBin(
 )
 
 map = leaflet() %>% 
-  addPolygons(data = council_districts, weight = 0, color = ~pal(perc_near_pool), 
+  councildown::addPolygons(data = council_districts, weight = 0, color = ~pal(perc_near_pool), 
               fillOpacity = 1, smoothFactor = 0) %>% 
   addCouncilStyle(add_dists = TRUE, 
                   highlight_dists = council_districts$CounDist[council_districts$perc_near_pool >= .4]) %>%
@@ -167,8 +167,8 @@ pal = colorBin(
 )
 
 map = leaflet() %>% 
-  addPolygons(data = council_districts, weight = 0, color = ~pal(num_nouse), 
-              fillOpacity = 1, smoothFactor = 0) %>% 
+  councildown::addPolygons(data = council_districts, weight = 0, 
+                           color = ~pal(num_nouse)) %>% 
   addCouncilStyle(add_dists = TRUE, 
                   highlight_dists = council_districts$CounDist[council_districts$num_nouse >= 50]) %>%
   addLegend_decreasing(position = "topleft", pal = pal, 

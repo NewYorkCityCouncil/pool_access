@@ -34,11 +34,24 @@ get_isochrone = function(data, t = 15) {
   return(temp)
 }
 
+get_driving_isochrone = function(data, t = 15) {
+  temp = mb_isochrone(location = as.vector(st_coordinates(data$geometry)),
+                      profile = "driving",
+                      time = t)
+  Sys.sleep(0.25) # to force us not to go over the API limit
+  return(temp)
+}
+
+
 # get the 15 minute walk zones for each pool, combine into shapefile, then union to make single shape
 # SLOW: takes a minute
 pools_walk_zone_15min = apply(pools, 1, FUN = get_isochrone)
 pools_walk_zone_15min = bind_rows(pools_walk_zone_15min)
 pools_walk_zone_15min = st_union(pools_walk_zone_15min)
+
+pools_drive_zone_15min = apply(pools, 1, FUN = get_isochrone)
+pools_drive_zone_15min = bind_rows(pools_drive_zone_15min)
+pools_drive_zone_15min = st_union(pools_drive_zone_15min)
 
 
 ################################################################################
@@ -74,6 +87,10 @@ no_use = no_use[overlaps_area == 1, ]
 land_walk_zone_15min = apply(no_use, 1, FUN = get_isochrone)
 land_walk_zone_15min = bind_rows(land_walk_zone_15min)
 
+# get the 15 minute walk zones for each pool, combine into shapefile, then union to make single shape
+# SLOW: takes a minute
+land_drive_zone_15min = apply(no_use, 1, FUN = get_driving_isochrone)
+land_drive_zone_15min = bind_rows(pools_drive_zone_15min)
 
 # ------------------------------------------------------------------------------
 # get population from census and blank out any population within a pool isochrone
@@ -114,11 +131,8 @@ pop = pop %>%
          tot_pop = value) %>%
   select(-total_area, -area_within_pool_zone, -value)
 
-
 # ------------------------------------------------------------------------------
 # pull population for each city owned "no use" land isochrone
-
-intersection = st_intersects(land_walk_zone_15min, pop)
 
 get_overlap_pop = function(x, population) {
   # where x is list of ids from pop
@@ -126,7 +140,13 @@ get_overlap_pop = function(x, population) {
   overlap_pop = sum(overlap_pop$pop)
   return(overlap_pop)
 }
+
+intersection = st_intersects(land_walk_zone_15min, pop)
 no_use$new_users = sapply(intersection, get_overlap_pop, population=pop)
+
+intersection = st_intersects(land_drive_zone_15min, pop)
+no_use$new_driving_users = sapply(intersection, get_overlap_pop, population=pop)
+
 
 
 ################################################################################
@@ -136,5 +156,6 @@ no_use$new_users = sapply(intersection, get_overlap_pop, population=pop)
 saveRDS(pop, file.path("data", "output", "block_population.RDS"))
 saveRDS(pools, file.path("data", "output", "pools.RDS"))
 saveRDS(pools_walk_zone_15min, file.path("data", "output", "pools_walk_zone_15min.RDS"))
+saveRDS(pools_drive_zone_15min, file.path("data", "output", "pools_drive_zone_15min.RDS"))
 saveRDS(no_use, file.path("data", "output", "no_use_city_property.RDS"))
 saveRDS(land_walk_zone_15min, file.path("data", "output", "land_walk_zone_15min.RDS"))
