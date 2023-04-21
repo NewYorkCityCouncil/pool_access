@@ -71,6 +71,16 @@ col_chart = ggplot(perc_access_borough) +
         axis.title.y = element_text()) + 
   ylab("% of Borough with a pool <15 minute walk away")
 
+col_chart <- perc_access_borough %>% 
+  ggplot(aes(x=reorder(borough,perc_pop_no_pool*100,decreasing = T),
+             y=perc_pop_no_pool*100,
+             tooltip = paste0(round(perc_pop_no_pool*100, 0), "%"))) + 
+  geom_col_interactive(fill = "#2F56A6", width = 0.8) + 
+  theme_nycc() + 
+  scale_y_continuous(expand = expansion(mult = c(0, .1))) +
+  labs(y="% of Borough with a pool <15 minute walk away", x="")
+
+
 tooltip_css = "background-color:#CACACA;"
 
 plot_interactive = girafe(ggobj = col_chart,   
@@ -118,14 +128,16 @@ pool_type_counts = pool_type_counts %>%
   filter(!pooltype %in% c("Olympic & Diving", "Intermediate & Diving"))
   
 
-col_chart = ggplot(pool_type_counts) + 
-  geom_col_interactive(aes(pooltype, count, 
-                           tooltip = count), 
-                       color = "#2F56A6", fill = "#2F56A6") + 
-  theme_fivethirtyeight() + 
-  theme(rect = element_rect(fill = "white", linetype = 0, colour = NA), 
-        axis.title.y = element_text()) + 
-  ylab("# of Pools")
+col_chart <- pool_type_counts %>% 
+  ggplot(aes(x=reorder(pooltype,count), y=count, 
+             fill=pooltype,
+             tooltip = pool_type_counts$count,)) + 
+  geom_col_interactive(width = 0.6, show.legend = F) + 
+  scale_fill_nycc("main", reverse = T) +
+  theme_nycc() + 
+  coord_flip() +
+  scale_y_continuous(expand = expansion(mult = c(0, .1))) +
+  labs(y= "Number of Pools", x="")
 
 tooltip_css = "background-color:#CACACA;"
 
