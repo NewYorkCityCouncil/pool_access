@@ -81,7 +81,7 @@ save_html(plot_interactive, file.path("visuals", "borough_pool_access.html"))
 
 
 ################################################################################
-# pools by borough bar chart
+# pools by borough table
 ################################################################################
 
 borough_count = raw_pools_data %>% 
@@ -95,3 +95,42 @@ borough_count = raw_pools_data %>%
                              borough == "R" ~ "Staten Island"))
 
 print(borough_count)
+
+################################################################################
+# pools by type bar chart
+################################################################################
+
+pool_type_counts = raw_pools_data %>%
+  st_drop_geometry() %>%
+  group_by(pooltype) %>%
+  summarise(count = n())
+pool_type_counts$count[pool_type_counts$pooltype == "Intermediate"] = pool_type_counts$count[pool_type_counts$pooltype == "Intermediate"] + 
+  pool_type_counts$count[pool_type_counts$pooltype == "Intermediate & Diving"]
+pool_type_counts$count[pool_type_counts$pooltype == "Diving"] = pool_type_counts$count[pool_type_counts$pooltype == "Diving"] + 
+  pool_type_counts$count[pool_type_counts$pooltype == "Intermediate & Diving"]
+
+pool_type_counts$count[pool_type_counts$pooltype == "Diving"] = pool_type_counts$count[pool_type_counts$pooltype == "Diving"] + 
+  pool_type_counts$count[pool_type_counts$pooltype == "Olympic & Diving"]
+pool_type_counts$count[pool_type_counts$pooltype == "Olympic"] = pool_type_counts$count[pool_type_counts$pooltype == "Olympic"] + 
+  pool_type_counts$count[pool_type_counts$pooltype == "Olympic & Diving"]
+
+pool_type_counts = pool_type_counts %>%
+  filter(!pooltype %in% c("Olympic & Diving", "Intermediate & Diving"))
+  
+
+col_chart = ggplot(pool_type_counts) + 
+  geom_col_interactive(aes(pooltype, count, 
+                           tooltip = count), 
+                       color = "#2F56A6", fill = "#2F56A6") + 
+  theme_fivethirtyeight() + 
+  theme(rect = element_rect(fill = "white", linetype = 0, colour = NA), 
+        axis.title.y = element_text()) + 
+  ylab("# of Pools")
+
+tooltip_css = "background-color:#CACACA;"
+
+plot_interactive = girafe(ggobj = col_chart,   
+                          width_svg = 8,
+                          height_svg = 5, 
+                          options = list(opts_tooltip(css = tooltip_css)))
+save_html(plot_interactive, file.path("visuals", "pool_types.html"))
