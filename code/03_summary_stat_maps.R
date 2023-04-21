@@ -55,7 +55,7 @@ map = leaflet() %>%
             title = "Number of Pools",
             values = sort(unique(council_districts$num_pools)), opacity = 1, 
             decreasing = T) %>%
-  addSourceText("Source: NYC Parks")
+  addSourceText("Source: NYC Parks. Only public pools under the jurisdiction of NYC Parks are included.")
 
 mapview::mapshot(map, 
         file = file.path("visuals", "pool_count_by_council_district.pdf"),
@@ -63,7 +63,7 @@ mapview::mapshot(map,
         vwidth = 1000, vheight = 850)
 
 
- # ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # percent of population within a 15 minute walk of a pool
 # ------------------------------------------------------------------------------
 
@@ -141,7 +141,7 @@ map = leaflet() %>%
             values = c(0, 1), opacity = 1, decreasing = T, 
             labFormat = labelFormat(transform = function(x){x*100}, 
                                     suffix = "%"))%>%
-  addSourceText("Sources: NYC Parks, Census, Mapbox")
+  addSourceText("Sources: NYC Parks, Census, Mapbox. Only public pools under the jurisdiction of NYC Parks are included.")
 
 mapview::mapshot(map, 
         file = file.path("visuals", "perc_pool_access_by_council_district.pdf"),
@@ -215,7 +215,8 @@ council_districts %>%
          max_pop_impact = format(round(max_pop_impact, 0), big.mark=",")) %>%
   select(CounDist, num_pools, num_nouse, perc_near_pool, max_pop_impact) %>%
   arrange(CounDist)  %>%
-  mutate(perc_near_pool = paste0(perc_near_pool, "%")) %>% 
+  mutate(perc_near_pool = paste0(perc_near_pool, "%"), 
+         max_pop_impact = gsub("NA", "", max_pop_impact)) %>%  
   rename(`Council District` = CounDist, 
          `# of Pools` = num_pools, 
          `# "No Use" City Owned Parcels` = num_nouse, 
@@ -225,3 +226,4 @@ council_districts %>%
   tab_header(title = "Pool Access by Council District") %>%
   gt_theme_nytimes() %>%
   gtsave("visuals/info_table.pdf")
+ 

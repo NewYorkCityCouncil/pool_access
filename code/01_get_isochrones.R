@@ -78,9 +78,7 @@ interest_area = st_read("https://data.cityofnewyork.us/api/geospatial/ykru-djh7?
   st_difference(pools_walk_zone_15min)
 
 # figure out which no_use locations are within the interest area and filter down
-overlaps_area = st_intersects(no_use, interest_area)
-overlaps_area = sapply(overlaps_area, length)
-no_use = no_use[overlaps_area == 1, ]
+no_use = no_use %>% st_join(interest_area, left = F) 
 
 # for each of the potential new pool locations, find 15 minute walk zone
 # SLOW: takes several minutes since we are rate limited to 300 requests a minute
