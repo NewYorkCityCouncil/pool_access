@@ -88,7 +88,7 @@ land_walk_zone_15min = bind_rows(land_walk_zone_15min)
 # get the 15 minute walk zones for each pool, combine into shapefile, then union to make single shape
 # SLOW: takes a minute
 land_drive_zone_15min = apply(no_use, 1, FUN = get_driving_isochrone)
-land_drive_zone_15min = bind_rows(pools_drive_zone_15min)
+land_drive_zone_15min = bind_rows(land_drive_zone_15min)
 
 # ------------------------------------------------------------------------------
 # get population from census and blank out any population within a pool isochrone
