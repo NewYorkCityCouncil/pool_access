@@ -62,14 +62,14 @@ perc_access_borough = pop %>%
   group_by(borough) %>%
   summarise(perc_pop_no_pool = (sum(tot_pop) - sum(pop))/sum(tot_pop))
 
-col_chart = ggplot(perc_access_borough) + 
-  geom_col_interactive(aes(borough, perc_pop_no_pool*100, 
-                           tooltip = paste0(round(perc_pop_no_pool*100, 0), "%")), 
-                       color = "#2F56A6", fill = "#2F56A6") + 
-  theme_fivethirtyeight() + 
-  theme(rect = element_rect(fill = "white", linetype = 0, colour = NA), 
-        axis.title.y = element_text()) + 
-  ylab("% of Borough with a pool <15 minute walk away")
+# col_chart = ggplot(perc_access_borough) + 
+#   geom_col_interactive(aes(borough, perc_pop_no_pool*100, 
+#                            tooltip = paste0(round(perc_pop_no_pool*100, 0), "%")), 
+#                        color = "#2F56A6", fill = "#2F56A6") + 
+#   theme_fivethirtyeight() + 
+#   theme(rect = element_rect(fill = "white", linetype = 0, colour = NA), 
+#         axis.title.y = element_text()) + 
+#   ylab("% of Borough with a pool <15 minute walk away")
 
 col_chart <- perc_access_borough %>% 
   ggplot(aes(x=reorder(borough,perc_pop_no_pool*100,decreasing = T),
