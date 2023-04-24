@@ -36,6 +36,7 @@ interest_area = ej_areas %>%
 no_use = no_use %>%
   mutate(label = paste0("<strong>Agency</strong>: ", agency, "<br>",
                         "<strong>Parcel Name:</strong> ", parcelname, "<br>", 
+                        "<strong>Address:</strong> ", address, "<br>",
                         "<strong>Use:</strong> ", usetype, "<br>",
                         "<strong># of people within 15 min walk, <br> who currently don't have pool access:</strong> ", 
                         format(round(new_users/100)*100, big.mark = ","))) %>%
