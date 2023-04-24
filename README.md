@@ -1,55 +1,26 @@
-# project_template
-a template repository for future github projects
+## 	Public swimming pool locations and swimming lessons offered by the department of parks and recreation.
+
+An associated webpage for this analysis can be found [on the council website](https://council.nyc.gov/data/pools/).
 
 
-## Basic Repo Structure Overview
+### Summary & Intention
 
-***
+This bill would require the Department of Parks and Recreation (DPR) to conduct a survey of sites owned by the City to identify suitable locations where additional public swimming pools could be built, with a focus on Environmental Justice (EJ) Communities and determine whether sites can accommodate more than one pool or other athletic equipment. It would also require that DPR consult with the Department of Education (DOE) on creating a plan to open pools under DOE jurisdiction for use by the public. Finally, it would require that DPR offer free swimming lessons at swimming pools under its jurisdiction.
 
-## Readme Example
+Given we have data on the location of current pools, the 2018 definitions of EJ Communities, and the locations of all City Owned and Leased Property, we can find where gaps in pool coverage are and where might be relevant areas to focus on in this 
 
 
+### Main Takeaways
 
-### Analyzing Storefront Vacancies
-Data analysis and visuals for NYCC 6.9.22 ['Oversight - Combatting Commercial Vacancies'](https://legistar.council.nyc.gov/MeetingDetail.aspx?From=Alert&ID=980028&GUID=239563C5-9CA2-44A7-8E1D-A970A0556192) hearing.
+* Pool access varies heavily by borough. The percentage of population within a 15 minute walk of a parks pool is 65% in Manhattan, 34% in Bronx, 31% in Brooklyn, 19% in Staten Island and 12% in Queens.
+* 35% of council districts don't have a public Parks pool.
+* Though this analysis doesn't consider if each of these locations are appropriate for a pool (ie what is already built there, the size of the plot, etc) there are many city owned properties that are currently classified as "no use" that are within a 15 minute walk of >100k residents not already served by a pool. 
 
-An associated webpage for this analysis can be found [on the council website](https://council.nyc.gov/data/vacant-storefronts/): 
 
-***  
+### Scripts + Replication 
 
-#### Data Sources 
-- [Storefronts Reported Vacant or Not (Filing Year 2020 - 2021)](https://data.cityofnewyork.us/City-Government/Storefronts-Reported-Vacant-or-Not-Filing-Year-202/92iy-9c3n)
-
-- 2019 5-Year ACS Survey: *We used R package censusapi to get demographic data
-
-#### Methodology 
-
-##### Summary & Intention
-New York City can be a challenging place for small businesses to operate. In addition to adhering to occasionally complex regulatory schemes enforced by multiple City agencies, business owners confront hurdles including rising rents, taxation, competition from chain stores and e-commerce retailers, and various zoning restrictions. Over the course of the last year, a slew of beloved local establishments across the city closed amid skyrocketing costs.
-
-Local Law 157 of 2019 seeks to gather data about the state of vacant storefronts to conduct the sort of studies needed to understand the full scope of storefront vacancy in New York City. The bill requires the department of finance to collect data and establish a public dataset of commercial properties in the City.
-
-The data team analyzed local law 57 data in order to:
-- Assess the severity of the problem 
-- Identify vacant storefront hotspots 
-- Release recommendations for better reporting
-
-#### Main Takeaways
-Through an analysis of this data, the New York City Council Data Team has investigated hotspots of storefront vacancies and potential economic correlations:
-
-- Overall, the highest vacancy rates are found in the lower and midtown Manhattan and downtown Brooklyn business areas. These are also the areas that received that most COVID-19 grants and loans.
-- At the neighborhood level, West Brighton, Stuyvesant Town-Cooper Village, Turtle Bay-East Midtown and Brooklyn Heights-Cobble Hill have the highest vacancies. 
-- At a more granular level, census tracts with the higher vacancy rates have, on average, 216 storefronts per census tract and are mostly located in lower Manhattan.
-- While the vacancy rate hovers around 12% for most census tracts, those with lower income residents are more likely to have very high vacancy rates (above 20% vacancy).
-- Improving current reporting of Local Law 157 of 2019 is important to fully understand the issue. Recommendations are provided below.
-
-#### Recommendations
-Certain changes could be made by the Department of Finance to improve the overall usability of the data set. Those changes include:
-
-- Adding a column for the date and specifically the year of the data collected
-- Streamlining the multiple datasets for each year into one dataset to allow for easy integration in live updating tools/maps/charts and more accessibility to citizen data scientists
-- Reduce geocode null values
-- Require class 1 properties to update their status as of 6/30 or date sold if earlier than 6/30
-- Require owners to report the primary business activity of the last business that leased the storefront
-
-#### Scripts
+* **00_load_dependencies.R** - reads in the necessary dependencies and defines some data to be used throughout the code 
+* **01_get_isochrones.R** - For every existing parks pool, generates the 15 minute walking isochrone (area that is within a 15 minute walk of the location). Combines this info with EJ Communities to find our areas of interest. Generates the 15 minute walking isochrones for all the "no use" properties of interest and overlaps with population data to find and save how many people are reached by each location. Most analysis is in this file, and all data is saved out to be mapped in further files. 
+* **02_map.R** - Creates an interactive map featured on the pools website showing where existing pools are located, the EJ communities the bill is focused on, and the "no use" city owned land that falls within them. 
+* **03_summary_stat_maps.R** - creates static maps for committee report including: number of pools by council district, % of population within a 15 minute walk of a pool by council district, and number of "no use" city owned land parcels by council district
+* **04_web_summary_stats.R** - creates the numbers called out specifically on the web page including: number of pools, number of pools after grouping locations, % of the city without access to a pool within a 15 minute walk, and a pools by borough table. 
