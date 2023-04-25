@@ -128,12 +128,10 @@ pool_type_counts = pool_type_counts %>%
   filter(!pooltype %in% c("Olympic & Diving", "Intermediate & Diving"))
   
 
-col_chart <- pool_type_counts %>% 
-  ggplot(aes(x=reorder(pooltype,count), y=count, 
-             fill=pooltype,
-             tooltip = pool_type_counts$count,)) + 
-  geom_col_interactive(width = 0.6, show.legend = F) + 
-  scale_fill_nycc("main", reverse = T) +
+col_chart = pool_type_counts %>% 
+  ggplot(aes(x = reorder(pooltype, count), y = count, 
+             tooltip = count)) + 
+  geom_col_interactive(width = 0.6, show.legend = F, fill = "#2F56A6") + 
   theme_nycc() + 
   coord_flip() +
   scale_y_continuous(expand = expansion(mult = c(0, .1))) +
