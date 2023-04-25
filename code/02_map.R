@@ -36,7 +36,7 @@ interest_area = ej_areas %>%
 no_use = no_use %>%
   mutate(label = paste0("<strong>Agency</strong>: ", agency, "<br>",
                         "<strong>Parcel Name:</strong> ", parcelname, "<br>", 
-                        "<strong>Address:</strong> ", address, "<br>",
+                        "<strong>Address:</strong> ", str_to_title(address), "<br>",
                         "<strong>Use:</strong> ", usetype, "<br>",
                         "<strong># of people within 15 min walk, <br> who currently don't have pool access:</strong> ", 
                         format(round(new_users/100)*100, big.mark = ","))) %>%
@@ -93,11 +93,11 @@ pal = colorFactor(
 
 breaks = classInt::classIntervals(no_use$new_users, n = 5, style = 'jenks')$brks
 breaks[length(breaks)] = breaks[length(breaks)] + 5000
-reds = c("#ff0000", "#ff8080", "#ffbfbf", "#ffe6e6")
+reds = c("#ff0000", "#ff8080", "#ffbfbf", "#fff6f6")
 
 pal2 = colorBin(
   palette = rev(colorRampPalette(reds)(5)),
-  bins = round(breaks/5000) * 5000,
+  bins = c(0, 25000, 50000, 75000, 100000, 155000),#round(breaks/5000) * 5000,
   domain = no_use$new_users
 ) 
 
@@ -110,11 +110,31 @@ map = leaflet(options = leafletOptions(attributionControl=FALSE,
   addCouncilStyle(add_dists = TRUE) %>%
   addCircles(data = pools, weight = 3, radius = 75, col = '#2F56A6', 
              opacity = 1, fillOpacity = 1, popup = ~name) %>%
-  addCircles(data = no_use, radius = 130, 
+  addCircles(data = no_use[no_use$new_users > 100000, ], radius = 130, 
             fillOpacity = 1, fillColor = ~pal2(new_users), 
             opacity = 1, color = "#660000", weight = 0.5,
             popup = ~label, 
-            group = "Potential Pool Locations") %>% 
+            group = "Potential sites where >100k people would gain pool access") %>%
+  addCircles(data = no_use[no_use$new_users > 75000, ], radius = 130, 
+             fillOpacity = 1, fillColor = ~pal2(new_users), 
+             opacity = 1, color = "#660000", weight = 0.5,
+             popup = ~label, 
+             group = "Potential sites where >75k people would gain pool access") %>% 
+  addCircles(data = no_use[no_use$new_users > 50000, ], radius = 130, 
+             fillOpacity = 1, fillColor = ~pal2(new_users), 
+             opacity = 1, color = "#660000", weight = 0.5,
+             popup = ~label, 
+             group = "Potential sites where >50k people would gain pool access") %>% 
+  addCircles(data = no_use[no_use$new_users > 25000, ], radius = 130, 
+             fillOpacity = 1, fillColor = ~pal2(new_users), 
+             opacity = 1, color = "#660000", weight = 0.5,
+             popup = ~label, 
+             group = "Potential sites where >25k people would gain pool access") %>% 
+  addCircles(data = no_use, radius = 130, 
+             fillOpacity = 1, fillColor = ~pal2(new_users), 
+             opacity = 1, color = "#660000", weight = 0.5,
+             popup = ~label, 
+             group = "All potential sites") %>% 
   addLegend_decreasing(position="topleft", pal, 
                        values = c("existing pool", 
                                   "area that is both >15 minute walk from a pool <br>&emsp;&emsp;and an Environmental Justice area"), 
@@ -122,7 +142,13 @@ map = leaflet(options = leafletOptions(attributionControl=FALSE,
   addLegend_decreasing(position="topleft", pal2, values = no_use$new_users, 
                        opacity = 1, decreasing = T, 
                        title = paste0("People who would gain access if a <br>", 
-                                      "pool were built at this location"))
+                                      "pool were built at this location")) %>%
+  addLayersControl(options = layersControlOptions(collapsed = F), 
+                   baseGroups = c("Potential sites where >100k people would gain pool access", 
+                                  "Potential sites where >75k people would gain pool access", 
+                                  "Potential sites where >50k people would gain pool access", 
+                                  "Potential sites where >25k people would gain pool access", 
+                                  "All potential sites"))
 
 saveWidget(map, file=file.path('visuals', 
                                "potential_pool_locations.html"))
