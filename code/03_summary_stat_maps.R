@@ -28,6 +28,8 @@ council_districts = unzip_sf("https://www.nyc.gov/assets/planning/download/zip/d
   st_read() %>%
   st_transform(st_crs(4326))
 
+community_districts = st_read("https://data.cityofnewyork.us/api/geospatial/yfnk-k7r4?method=export&format=GeoJSON")
+
 
 ################################################################################
 # static maps
@@ -103,7 +105,7 @@ pop = pop %>%
   select(-total_area, -area_within_pool_zone, -value)
 
 
-# formula to apply for each council district
+ # formula to apply for each council district
 get_overlap_pop = function(x, population, col="pop") {
   # where x is list of ids from pop
   overlap_pop = population[x, ]
@@ -147,6 +149,59 @@ mapview::mapshot(map,
         file = file.path("visuals", "perc_pool_access_by_council_district.pdf"),
         remove_controls = c("homeButton", "layersControl", "zoomControl"), 
         vwidth = 1000, vheight = 850)
+
+
+# ------------------------------------------------------------------------------
+# community districts % of pop within 15 minutes + pool count
+# ------------------------------------------------------------------------------
+
+# get the list of blocks that each community district overlaps then apply the formula
+#   to get the pop <15 min from pool + total community district pop
+community_block_intersection = st_intersects(community_districts, pop)
+community_districts$pop_near_pool = sapply(community_block_intersection,
+                                         get_overlap_pop, 
+                                         population=pop, col="pop_near_pool")
+community_districts$pop = sapply(community_block_intersection, get_overlap_pop, 
+                               population=pop, col="pop")
+community_districts$perc_near_pool = community_districts$pop_near_pool/community_districts$pop
+
+
+pools_by_district = st_intersects(community_districts, pools)
+pools_by_district = sapply(pools_by_district, length)
+
+community_districts$num_pools = pools_by_district
+
+write_csv(community_districts %>% 
+            st_drop_geometry() %>% 
+            select(boro_cd, perc_near_pool, num_pools) %>%
+            rename(`Community District` = boro_cd, `# of Pools` = num_pools, 
+                   `% of Population <15 minute walk from a pool` = perc_near_pool), 
+          file.path("data", "output", "community_districts_pool.csv"))
+
+# prep for plotting
+pal = colorBin(
+  palette = colorRamp(rev(nycc_pal("cool")(12))),
+  domain = c(0.000001, 1),
+  bins = c(0.000001, .2, .4, .6, .8, 1),
+  na.color = "transparent"
+)
+
+map = leaflet() %>% 
+  councildown::addPolygons(data = community_districts, weight = 0, color = ~pal(perc_near_pool), 
+                           fillOpacity = 1, smoothFactor = 0) %>% 
+  councildown::addPolygons(data = community_districts[community_districts$perc_near_pool < 0.00001, ], 
+                           weight = 0, color = "darkgrey", 
+                           fillOpacity = 1, smoothFactor = 0) %>% 
+  councildown::addPolygons(data = pools_walk_zone_15min, weight = 0, color = "red", 
+                           fillOpacity = 0.2, smoothFactor = 0) %>% 
+  addCouncilStyle(add_dists = F) %>%
+  addLegend_decreasing(position = "topleft", pal = pal, 
+                       title = paste0("% of population that has access to <br>", 
+                                      "a pool within a 15 minute walk"),  
+                       values = c(0, 1), opacity = 1, decreasing = T, 
+                       labFormat = labelFormat(transform = function(x){x*100}, 
+                                               suffix = "%"))%>%
+  addSourceText("Sources: NYC Parks, Census, Mapbox. Only public pools under the jurisdiction of NYC Parks are included.")
 
 
 # ------------------------------------------------------------------------------
@@ -224,6 +279,5 @@ council_districts %>%
          `Population <15 minute walk from best located "No Use" parcel` = max_pop_impact) %>%
   gt() %>%
   tab_header(title = "Pool Access by Council District") %>%
-  gt_theme_nytimes() %>%
-  gtsave("visuals/info_table.pdf")
+  write.xlsx("visuals/info_table.xlsx")
  

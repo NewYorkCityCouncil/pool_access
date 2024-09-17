@@ -61,6 +61,7 @@ pools$tooltip = paste0("<strong>Name:</strong> ", pools$name,
                        "<br><strong>Type:</strong> ", pools$pooltype, 
                        "<br><strong>Location:</strong> ", pools$location)
 
+# 100 year floodplain
 map = leaflet(options = leafletOptions(attributionControl=FALSE, 
                                  zoomControl = FALSE, 
                                  minZoom = 10, 
@@ -75,7 +76,8 @@ map = leaflet(options = leafletOptions(attributionControl=FALSE,
   addLegend_decreasing(position="topleft", pal, 
                        values = c("Council District with no pool", 
                                   "Existing Parks Pool"), 
-                       opacity = 1)
+                       opacity = 1) %>%
+  addSourceText(paste0("There are "))
 
 saveWidget(map, file=file.path('visuals', 
                                "existing_pool_locations.html"))
@@ -101,7 +103,7 @@ pal2 = colorBin(
   domain = no_use$new_users
 ) 
 
-map = leaflet(options = leafletOptions(attributionControl=FALSE, 
+map = leaflet::leaflet(options = leafletOptions(attributionControl=FALSE, 
                                        zoomControl = FALSE, 
                                        minZoom = 10, 
                                        maxZoom = 15)) %>%

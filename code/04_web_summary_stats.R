@@ -60,7 +60,7 @@ perc_access_borough = pop %>%
                              borough == "Richmond" ~ "Staten Island", 
                              T ~ borough)) %>%
   group_by(borough) %>%
-  summarise(perc_pop_no_pool = (sum(tot_pop) - sum(pop))/sum(tot_pop))
+  summarise(perc_pop_pool = (sum(tot_pop) - sum(pop))/sum(tot_pop))
 
 # col_chart = ggplot(perc_access_borough) + 
 #   geom_col_interactive(aes(borough, perc_pop_no_pool*100, 
@@ -72,9 +72,9 @@ perc_access_borough = pop %>%
 #   ylab("% of Borough with a pool <15 minute walk away")
 
 col_chart <- perc_access_borough %>% 
-  ggplot(aes(x=reorder(borough,perc_pop_no_pool*100,decreasing = T),
+  ggplot(aes(x=reorder(borough, perc_pop_pool*100,decreasing = T),
              y=perc_pop_no_pool*100,
-             tooltip = paste0(round(perc_pop_no_pool*100, 0), "%"))) + 
+             tooltip = paste0(round(perc_pop_pool*100, 0), "%"))) + 
   geom_col_interactive(fill = "#2F56A6", width = 0.8) + 
   theme_nycc() + 
   scale_y_continuous(expand = expansion(mult = c(0, .1))) +
@@ -144,3 +144,12 @@ plot_interactive = girafe(ggobj = col_chart,
                           height_svg = 5, 
                           options = list(opts_tooltip(css = tooltip_css)))
 save_html(plot_interactive, file.path("visuals", "pool_types.html"))
+
+
+################################################################################
+# number of pools in each callout zone for text
+################################################################################
+
+c = st_join(no_use, council_districts)
+table(c$coun_dist[c$new_users > 100000])
+
